@@ -18,20 +18,43 @@
 
 ## 시작하기
 
-```bash
-bun install
-bun dev
-```
+### 준비물
 
-개발 서버는 기본적으로 [http://localhost:3000](http://localhost:3000) 에서 열립니다.
+- [Git](https://git-scm.com)
+- [bun](https://bun.sh) 1.3.6 이상 (`bun -v`로 확인)
+- Node.js 20.9 이상 (Next.js 16 요구 사항, `node -v`로 확인)
 
-자주 쓰는 스크립트:
+### 설치와 실행
+
+1. 저장소를 받아 폴더로 이동합니다.
+
+   ```bash
+   git clone https://github.com/AAudreyLee/todo-tutorial.git
+   cd todo-tutorial
+   ```
+
+2. 의존성을 설치합니다.
+
+   ```bash
+   bun install
+   ```
+
+3. 개발 서버를 실행합니다.
+
+   ```bash
+   bun dev
+   ```
+
+4. 브라우저에서 [http://localhost:3000](http://localhost:3000) 을 엽니다. 3000번 포트가 이미 쓰이고 있으면 터미널에 표시된 다른 주소를 사용하세요. 서버는 `Ctrl+C`로 종료합니다.
+
+### 자주 쓰는 스크립트
 
 ```bash
 bun run build      # 프로덕션 빌드
-bun run start      # 빌드 결과 실행
+bun run start      # 빌드 결과 실행 (먼저 build 필요)
 bun run lint       # ESLint
 bun run typecheck  # tsc --noEmit
+bun run test       # Vitest 테스트 한 번 실행
 bun run format     # Prettier 포맷팅
 ```
 
