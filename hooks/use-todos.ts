@@ -6,6 +6,8 @@ export type Todo = {
   id: string
   text: string
   completed: boolean
+  // 목표 날짜 (YYYY-MM-DD). 이 필드가 없던 예전 데이터도 그대로 읽을 수 있게 선택값으로 둔다
+  targetDate?: string
 }
 
 const STORAGE_KEY = "todos"
@@ -54,11 +56,30 @@ export function useTodos() {
   }, [])
 
   const addTodo = useCallback(
-    (text: string) =>
+    (text: string, targetDate?: string) =>
       update((prev) => [
-        { id: crypto.randomUUID(), text, completed: false },
+        {
+          id: crypto.randomUUID(),
+          text,
+          completed: false,
+          ...(targetDate ? { targetDate } : {}),
+        },
         ...prev,
       ]),
+    [update]
+  )
+
+  const setTargetDate = useCallback(
+    (id: string, targetDate: string) =>
+      update((prev) =>
+        prev.map((t) => {
+          if (t.id !== id) return t
+          // 빈 값이면 목표 날짜를 지운다
+          const next: Todo = { ...t, targetDate }
+          if (!targetDate) delete next.targetDate
+          return next
+        })
+      ),
     [update]
   )
 
@@ -86,5 +107,13 @@ export function useTodos() {
     [update]
   )
 
-  return { todos, addTodo, toggleTodo, deleteTodo, editTodo, clearCompleted }
+  return {
+    todos,
+    addTodo,
+    setTargetDate,
+    toggleTodo,
+    deleteTodo,
+    editTodo,
+    clearCompleted,
+  }
 }

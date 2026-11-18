@@ -21,10 +21,25 @@ const FILTERS: { value: Filter; label: string }[] = [
 // localStorage 지원 여부는 바뀌지 않으므로 구독할 이벤트가 없다
 const subscribeNothing = () => () => {}
 
+// 오늘 날짜를 로컬 시간대 기준 YYYY-MM-DD로 돌려준다
+function todayString() {
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
 export function TodoApp() {
-  const { todos, addTodo, toggleTodo, deleteTodo, editTodo, clearCompleted } =
-    useTodos()
+  const {
+    todos,
+    addTodo,
+    setTargetDate,
+    toggleTodo,
+    deleteTodo,
+    editTodo,
+    clearCompleted,
+  } = useTodos()
   const [draft, setDraft] = useState("")
+  const [draftDate, setDraftDate] = useState("")
   const [filter, setFilter] = useState<Filter>("all")
 
   const completedCount = todos.filter((todo) => todo.completed).length
@@ -42,8 +57,9 @@ export function TodoApp() {
     if (e.key !== "Enter" || e.nativeEvent.isComposing) return
     const text = draft.trim()
     if (!text) return
-    addTodo(text)
+    addTodo(text, draftDate)
     setDraft("")
+    setDraftDate("")
     // 새 항목이 필터에 가려지지 않도록 전체 보기로 돌아간다
     setFilter("all")
   }
@@ -63,14 +79,25 @@ export function TodoApp() {
           ? "할 일은 이 브라우저에 저장됩니다"
           : "이 브라우저에서는 할 일이 저장되지 않습니다"}
       </p>
-      <Input
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="할 일을 입력하고 Enter"
-        aria-label="새 할 일"
-        autoFocus
-      />
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="할 일을 입력하고 Enter"
+          aria-label="새 할 일"
+          autoFocus
+          className="flex-1"
+        />
+        <Input
+          type="date"
+          value={draftDate}
+          onChange={(e) => setDraftDate(e.target.value)}
+          onKeyDown={handleKeyDown}
+          aria-label="새 할 일의 목표 날짜"
+          className="w-36 shrink-0"
+        />
+      </div>
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <TabsList aria-label="필터">
           {FILTERS.map(({ value, label }) => (
@@ -95,6 +122,7 @@ export function TodoApp() {
               onToggle={() => toggleTodo(todo.id)}
               onDelete={() => deleteTodo(todo.id)}
               onEdit={(text) => editTodo(todo.id, text)}
+              onTargetDateChange={(date) => setTargetDate(todo.id, date)}
             />
           ))}
         </ul>
@@ -120,11 +148,13 @@ function TodoItem({
   onToggle,
   onDelete,
   onEdit,
+  onTargetDateChange,
 }: {
   todo: Todo
   onToggle: () => void
   onDelete: () => void
   onEdit: (text: string) => void
+  onTargetDateChange: (date: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(todo.text)
@@ -184,6 +214,20 @@ function TodoItem({
           {todo.text}
         </span>
       )}
+      <Input
+        type="date"
+        value={todo.targetDate ?? ""}
+        onChange={(e) => onTargetDateChange(e.target.value)}
+        aria-label={`${todo.text} 목표 날짜`}
+        className={cn(
+          "h-8 w-36 shrink-0 text-xs",
+          // 기한이 지났는데 아직 안 끝난 할 일은 강조한다
+          todo.targetDate &&
+            !todo.completed &&
+            todo.targetDate < todayString() &&
+            "text-destructive"
+        )}
+      />
       <Button
         variant="ghost"
         size="icon-sm"
