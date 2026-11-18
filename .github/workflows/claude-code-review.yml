@@ -24,15 +24,20 @@ jobs:
       pull-requests: read
       issues: read
       id-token: write
+    env:
+      # 시크릿이 없으면(앱·토큰 미설정) 리뷰 단계를 건너뛴다. job 수준 if에서는 secrets를 쓸 수 없어 env로 우회한다.
+      HAS_CLAUDE_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
 
     steps:
       - name: Checkout repository
+        if: env.HAS_CLAUDE_TOKEN == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Run Claude Code Review
         id: claude-review
+        if: env.HAS_CLAUDE_TOKEN == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
